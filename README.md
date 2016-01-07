@@ -1,1 +1,4 @@
-# autochecker
+# AutoChecker
+
+## Check for license header
+
