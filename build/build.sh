@@ -13,51 +13,53 @@
 ##############################################################################
 # Define Defaults
 ##############################################################################
-DEFAULT_REPO_LIST=../conf/projects.repo
-DEFAULT_REPO_BRANCH=stable/beryllium
-DEFAULT_REPO_REMOTE=remotes/origin/stable/beryllium
-DEFAULT_REPORT_PATH=report.txt
 
 ##############################################################################
 # Define Variables
 ##############################################################################
-REPO_LIST=${1-${DEFAULT_REPO_LIST}}
-REPO_BRANCH=${2-${DEFAULT_REPO_BRANCH}}
-REPO_REMOTE=${3-${DEFAULT_REPO_REMOTE}}
-REPORT_PATH=${4-${DEFAULT_REPORT_PATH}}
-REPORT_STATUS=0
+BUILD_PHASE=${1-package}
 
 ##############################################################################
-# Clone Projects
+# Show Usage
 ##############################################################################
-clone () {
-  mkdir -p projects
-  cp iterate.pl projects/iterate.pl
-  (cd projects; ./iterate.pl --no-cd ${REPO_LIST} "git clone https://git.opendaylight.org/gerrit/{f}.git")
-  #(cd projects; ./iterate.pl ${REPO_LIST} "git checkout -b ${REPO_BRANCH} ${REPO_REMOTE}")
-  rm -rf projects/iterate.pl
+usage () {
+  echo "AutoChecker Build Commend"
+  echo "usage: build.sh [<phase>]"
+  echo "Phases:"
+  echo "    help    Display command line usage information."
+  echo "    clean   Clean project binaries."
+  echo "    package Build project binaries."
+}
+
+##############################################################################
+# Clean Autochecker
+##############################################################################
+clean () {
+  rm -rf ../bin
+  (cd ../autochecker/; mvn clean)
 }
 
 ##############################################################################
 # Package Autochecker
 ##############################################################################
 package () {
+  mkdir -p ../bin
+  mkdir -p ../bin/var
   (cd ../autochecker/; mvn package)
-  cp ../autochecker/target/autochecker.jar autochecker.jar
-  cp -R ../autochecker/target/lib lib
+  cp ../autochecker/target/autochecker.jar ../bin/var/autochecker.jar
+  cp -R ../autochecker/target/lib ../bin/var/lib
+  cp iterate.pl ../bin/var/iterate.pl
+  cp -R conf ../bin/conf
+  cp autochecker ../bin/autochecker
 }
 
-##############################################################################
-# Execute Autochecker
-##############################################################################
-execute () {
-  java -jar autochecker.jar > ${REPORT_PATH}
-  REPORT_STATUS=$?
-  echo "Completed with status: ${REPORT_STATUS}"
-}
+if [ "${BUILD_PHASE}" = "help" ]; then
+  usage
+elif [ "${BUILD_PHASE}" = "clean" ]; then
+  clean
+elif [ "${BUILD_PHASE}" = "package" ]; then
+  package
+else
+  usage
+fi
 
-clone
-package
-execute
-
-exit ${REPORT_STATUS}

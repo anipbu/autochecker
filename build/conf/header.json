@@ -4,7 +4,7 @@
             name: "Eclipse License Check",
             directory: "projects",
             extensions: ["java"],
-            excludes: ["\/org\/opendaylight\/yang\/gen\/", "\/config\/yang\/", "\/protobuff\/messages\/", "\/thrift\/gen\/"],
+            excludes: ["\/org\/opendaylight\/yang\/gen\/", "\/config\/yang\/", "\/protobuff\/messages\/", "\/thrift\/gen\/", "\/src\/test\/java\/"],
             template: "conf/license.txt"
         }
     ]

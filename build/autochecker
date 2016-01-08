@@ -1,0 +1,125 @@
+#!/bin/bash
+
+# @License EPL-1.0 <http://spdx.org/licenses/EPL-1.0>
+##############################################################################
+# Copyright (c) 2016 Company and Others.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+##############################################################################
+
+##############################################################################
+# Define Defaults
+##############################################################################
+REPO_NAME=""
+REPO_FILE=conf/projects.repo
+REPO_BRANCH=""
+REPO_REMOTE=""
+OUTPUT_FILE=report.txt
+OUTPUT_STATUS=0
+HELP=FALSE
+
+##############################################################################
+# Define Variables
+##############################################################################
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+    -n|--name)
+    REPO_NAME="$2"
+    shift # past argument
+    ;;
+    -f|--file)
+    REPO_FILE="$2"
+    shift # past argument
+    ;;
+    -rb|--repo-branch)
+    REPO_BRANCH="$2"
+    shift # past argument
+    ;;
+    -rr|--repo-remote)
+    REPO_REMOTE="$2"
+    shift # past argument
+    ;;
+    -o|--output)
+    OUTPUT_FILE="$2"
+    shift # past argument
+    ;;
+    -h|--help)
+    HELP=TRUE
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+shift # past argument or value
+done
+
+##############################################################################
+# Clone Projects
+##############################################################################
+usage() {
+  echo "AutoChecker Commend"
+  echo "Usage: autochecker [-options]"
+  echo "Where options include:"
+  echo "    --name | -n     Name of a SINGLE project repository.  Supports"
+  echo "                    only one project.  --file parameter is ignored"
+  echo "                    when --name is defined"
+  echo "    --file | -f     Path to file with project repository list file."
+  echo "                    Use when defining multiple projects"
+  echo "    --output | -o   Path to location of ooutput report file."
+}
+##############################################################################
+# Clone Projects
+##############################################################################
+params() {
+  echo "Project repo name: ${REPO_NAME}"
+  echo "Project repo list file: ${REPO_FILE}"
+  echo "Branch name: ${REPO_BRANCH}"
+  echo "Remote name: ${REPO_REMOTE}"
+  echo "Output file: ${OUTPUT_FILE}"
+}
+
+##############################################################################
+# Clone Projects
+##############################################################################
+clone () {
+  mkdir -p projects
+  cp var/iterate.pl projects/iterate.pl
+  if [ "${REPO_NAME}" = "" ]; then
+    (cd projects; ./iterate.pl --no-cd ../${REPO_FILE} "git clone https://git.opendaylight.org/gerrit/{f}.git")
+    if [ -n "${REPO_BRANCH}" ]; then
+      echo "Branching not yet supported."
+      #(cd projects; ./iterate.pl ../${REPO_FILE} "git checkout -b ${REPO_BRANCH} ${REPO_REMOTE}")
+    fi
+  else
+    (cd projects; git clone https://git.opendaylight.org/gerrit/${REPO_NAME}.git)
+    if [ -n "${REPO_BRANCH}" ]; then
+      echo "Branching not yet supported."
+      #(cd projects/${REPO_NAME}; git checkout -b ${REPO_BRANCH} ${REPO_REMOTE})
+    fi
+  fi
+}
+
+##############################################################################
+# Execute Autochecker
+##############################################################################
+execute () {
+  java -jar var/autochecker.jar > ${OUTPUT_FILE}
+  OUTPUT_STATUS=$?
+  echo "Completed with status: ${OUTPUT_STATUS}"
+}
+
+if [ "${HELP}" = "TRUE" ]; then
+  usage
+  exit
+fi
+#params
+clone
+execute
+
+exit ${OUTPUT_STATUS}
+
