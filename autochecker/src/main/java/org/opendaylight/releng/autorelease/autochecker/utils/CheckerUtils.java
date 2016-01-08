@@ -26,4 +26,15 @@ public class CheckerUtils {
         return null;
     }
 
+	public static List<Integer> toIntegerList(JSONArray json) throws JSONException {
+		if (json != null) {
+            List<Integer> strings = new ArrayList<Integer>();
+            for (int i = 0; i < json.length(); i++) {
+                strings.add(Integer.valueOf(json.getInt(i)));
+            }
+            return strings;
+        }
+        return null;
+	}
+
 }

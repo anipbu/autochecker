@@ -28,6 +28,8 @@ public class HeaderCheckerJob implements CheckerJob {
 
     private List<String> lines;
 
+    private List<Integer> multilines;
+
     public HeaderCheckerJob(JSONObject json) throws JSONException, IOException {
         if (json.has("directory")) {
             directory = json.getString("directory");
@@ -41,6 +43,9 @@ public class HeaderCheckerJob implements CheckerJob {
         if (json.has("template")) {
             template = json.getString("template");
             lines = FileUtils.readLines(new File(template));
+        }
+        if (json.has("multilines")) {
+        	multilines = CheckerUtils.toIntegerList(json.getJSONArray("multilines"));
         }
     }
 
@@ -83,5 +88,13 @@ public class HeaderCheckerJob implements CheckerJob {
     public void setLines(List<String> lines) {
         this.lines = lines;
     }
+
+	public List<Integer> getMultilines() {
+		return multilines;
+	}
+
+	public void setMultilines(List<Integer> multilines) {
+		this.multilines = multilines;
+	}
 
 }

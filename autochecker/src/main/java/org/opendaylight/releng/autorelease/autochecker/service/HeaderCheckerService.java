@@ -101,26 +101,45 @@ public class HeaderCheckerService implements CheckerService {
                 failed++;
                 continue;
             }
-            List<String> sourcelines = FileUtils.readLines(file);
-            if (sourcelines.size() < job.getLines().size()) {
-                fail("Header mismatch: expected " + job.getLines().size() + " lines; actual " + sourcelines.size() + " lines.", file);
+            boolean find = match(job.getLines(), FileUtils.readLines(file), job.getMultilines(), file);
+            if (!find) {
                 failed++;
                 continue;
-            }
-            for (int i = 0; i < job.getLines().size(); i++) {
-                Pattern pattern = Pattern.compile(job.getLines().get(i));
-                Matcher matcher = pattern.matcher(sourcelines.get(i));
-                boolean find = matcher.find();
-                if (!find) {
-                    fail("Line mismatch: expected " + job.getLines().get(i) + "; actual " + sourcelines.get(i), file);
-                    failed++;
-                    continue;
-                }
             }
             passed++;
         }
         System.out.println("[HeaderCheckerService Report] Total: " + files.size() + "; Passed: " + passed + "; Failed: " + failed + "; Skipped: " + skipped + ";");
         return failed;
+    }
+
+    private boolean match(List<String> joblines, List<String> sourcelines, List<Integer> multilines, File file) {
+        int sourceindex = 0;
+        if (sourcelines.size() < joblines.size()) {
+            fail("Header mismatch: Expected " + joblines + " lines; Actual " + sourcelines.size() + " lines.", file);
+            return false;
+        }
+        for (int i = 0; i < joblines.size(); i++) {
+            Pattern pattern = Pattern.compile(joblines.get(i));
+            Matcher matcher = pattern.matcher(sourcelines.get(sourceindex));
+            boolean find = matcher.find();
+            if (!find) {
+                fail("Line mismatch: Expected " + joblines.get(i) + "; Actual " + sourcelines.get(sourceindex), file);
+                return false;
+            }
+            if (multilines != null && multilines.contains(Integer.valueOf(i))) {
+            	while (sourceindex + 1 < sourcelines.size()) {
+            		Matcher multilinematcher = pattern.matcher(sourcelines.get(sourceindex + 1));
+            		boolean multilinefind = multilinematcher.find();
+            		if (multilinefind) {
+            			sourceindex++;
+            		} else {
+            			break;
+            		}
+            	}
+            }
+            sourceindex++;
+        }
+        return true;
     }
 
     private void fail(String message, File file) {
